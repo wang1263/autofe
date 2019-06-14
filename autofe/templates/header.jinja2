@@ -1,0 +1,41 @@
+{% extends 'macros.jinja2' %}
+{% block main %}
+# coding: UTF-8
+# input script according to definition of "run" interface
+from trailer import logger
+from pyspark import SparkContext
+from pyspark.sql import SQLContext
+
+sc = SparkContext._active_spark_context
+sqlContext = SQLContext(sc)
+
+sc.addPyFile('hdfs://m7-model-hdp01:8020/user/zhuxiaodan/autofe/CONSTANTS.py')
+sc.addPyFile('hdfs://m7-model-hdp01:8020/user/zhuxiaodan/autofe/__init__.py')
+sc.addPyFile('hdfs://m7-model-hdp01:8020/user/zhuxiaodan/autofe/functions.py')
+sc.addPyFile('hdfs://m7-model-hdp01:8020/user/zhuxiaodan/autofe/utils.py')
+sc.addPyFile('hdfs://m7-model-hdp01:8020/user/zhuxiaodan/autofe/window_aggregate.py')
+sc.addPyFile('hdfs://m7-model-hdp01:8020/user/zhuxiaodan/autofe/join2.py')
+sc.addPyFile('hdfs://m7-model-hdp01:8020/user/zhuxiaodan/autofe/arithmetic.py')
+sc.addPyFile('hdfs://m7-model-hdp01:8020/user/zhuxiaodan/autofe/window_aggregate_sql.py')
+sc.addPyFile('hdfs://m7-model-hdp01:8020/user/zhuxiaodan/autofe/operations.py')
+from operations import *
+from functions import *
+import functools
+
+def identity():
+    """
+    It does nothing, just for purpose of testing
+    """
+    return lambda x:x
+
+def _generate_functions(function_names):
+    functions = {}
+    for fname in set(function_names):
+        function = eval(fname)
+        if fname not in ['ifexist', 'last']:
+            functions[fname] = functools.partial(function, transformer=identity())
+        else:
+            functions[fname] = functools.partial(function)
+    return functions
+{% block run %}{% endblock %}
+{% endblock %}

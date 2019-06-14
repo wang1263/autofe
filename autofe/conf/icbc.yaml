@@ -1,0 +1,58 @@
+#tables:
+###数据定义，表名，字段名，字段类型
+#  table1:
+#    name: trade
+#    col: trx_seq,label,cardno,umid,trx_time,trx_time_std,flag,amt,responsecode,amt_bin,isweekend,weekday,hour,trx_time_diff,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,x17,x18,x19,x20,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16,y17,y18,y19,y20
+#  table2:
+#    name: card
+#    col: cardno,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16,y17,y18,y19,y20
+
+dag1:
+  inputs: 2
+  ops:
+    op1:
+      name: join
+      args:
+        table: t1,t2
+        condition: t1.cardno == t2.cardno
+        how: inner
+        drop: t1.cardno
+      output: t3
+
+dag2:
+  inputs: 1
+  ops:
+    op1:
+      name: window_aggregate
+      args:
+        table: t3
+        windows: "[        {'name':'10s','range':(10,0),'row':(None,None)},        {'name':'1m','range':(60,0),'row':(None,None)},        {'name':'5m','range':(60*5,0),'row':(None,None)},        {'name':'30m','range':(60*30,0),'row':(None,None)},        {'name':'2h','range':(3600*2,0),'row':(None,None)},        {'name':'12h','range':(3600*12,0),'row':(None,None)},        {'name':'1d','range':(3600*24,0),'row':(None,None)},        {'name':'2d','range':(3600*24*2,0),'row':(None,None)},        {'name':'5d','range':(3600*24*5,0),'row':(None,None)},        ]"
+        aggregate_functions: ["ifexist","existcount","countdistinct","entropy"]
+        partition_cols: ['cardno','umid']
+        target_cols: ['cardno','umid','responsecode','amt_bin','isweekend','weekday','hour','trx_time_diff']
+        order_col: 'trx_time_std'
+        partition_num: 200
+      output: t4
+    op2:
+      name: window_aggregate
+      args:
+        table: t4
+        windows: "[        {'name':'10s','range':(10,0),'row':(None,None)},        {'name':'1m','range':(60,0),'row':(None,None)},        {'name':'5m','range':(60*5,0),'row':(None,None)},        {'name':'30m','range':(60*30,0),'row':(None,None)},        {'name':'2h','range':(3600*2,0),'row':(None,None)},        {'name':'12h','range':(3600*12,0),'row':(None,None)},        {'name':'1d','range':(3600*24,0),'row':(None,None)},        {'name':'2d','range':(3600*24*2,0),'row':(None,None)},        {'name':'5d','range':(3600*24*5,0),'row':(None,None)},        ]"
+        aggregate_functions: ['fsum','fmax','ifexist','existcount','countdistinct','entropy']
+        partition_cols: ['cardno','umid']
+        target_cols: ['amt']
+        order_col: 'trx_time_std'
+        partition_num: 200
+      output: t5
+    op3:
+      name: window_aggregate
+      args:
+        table: t5
+        windows: "[{'name':'1mo','range':(3600*24*30,0),'row':(None,None)}]"
+        aggregate_functions: ["ifexist","existcount","countdistinct"]
+        partition_cols: ['cardno','umid']
+        target_cols: ['cardno','umid','responsecode','amt_bin','isweekend','weekday','hour','trx_time_diff']
+        order_col: 'trx_time_std'
+        partition_num: 200
+      output: t6
+

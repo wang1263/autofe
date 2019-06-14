@@ -1,0 +1,61 @@
+#tables:
+###数据定义，表名，字段名，字段类型
+#  table1:
+#    name: trade
+#    col: trx_seq,label,cardno,umid,trx_time,trx_time_std,flag,amt,responsecode,amt_bin,isweekend,weekday,hour,trx_time_diff,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,x17,x18,x19,x20,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16,y17,y18,y19,y20
+#  table2:
+#    name: card
+#    col: cardno,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16,y17,y18,y19,y20
+
+
+dag1:
+  inputs: 1
+  ops:
+    op1:
+      name: arithmetic
+      args:
+        table: t1
+        expr: "{0}-{1}"
+        prefix: 'ts_diff_'
+        col_lists:
+          cols1: ['kehu_BTHDATE_timestamp','kehu_BTHDATE_timestamp','kehu_BTHDATE_timestamp','kehu_BTHDATE_timestamp','kehu_BTHDATE_timestamp','kehu_BTHDATE_timestamp','jiuzhen_ILLDATE_timestamp','jiuzhen_ILLDATE_timestamp','jiuzhen_ILLDATE_timestamp','jiuzhen_ILLDATE_timestamp','jiuzhen_ILLDATE_timestamp','jiuzhen_ILLDATE_timestamp','ACCDATE_timestamp','ACCDATE_timestamp','ACCDATE_timestamp','ACCDATE_timestamp','ACCDATE_timestamp','ACCDATE_timestamp','ACCDATE_timestamp','lipei_BEGDATE_timestamp']
+          cols2: ['kehu_REGDATE_timestamp','baodan_PEDATE_timestamp','baodan_BEGDATE_timestamp','jiuzhen_ILLDATE_timestamp','lipei_BEGDATE_timestamp','lipei_MODATE_timestamp','kehu_REGDATE_timestamp','baodan_PEDATE_timestamp','baodan_BEGDATE_timestamp','jiuzhen_OUTDATE_timestamp','lipei_BEGDATE_timestamp','lipei_MODATE_timestamp','kehu_BTHDATE_timestamp','kehu_REGDATE_timestamp','baodan_PEDATE_timestamp','baodan_BEGDATE_timestamp','jiuzhen_ILLDATE_timestamp','lipei_BEGDATE_timestamp','lipei_MODATE_timestamp','lipei_MODATE_timestamp']
+      output: t2
+    op2:
+      name: arithmetic
+      args:
+        table: t2
+        expr: "{0}*1.0/{1}"
+        prefix: 'r_'
+        col_lists:
+          cols1: ['lipei_ESTAMT','baodan_TMOUNT','lipei_ESTAMT']
+          cols2: ['baodan_SUMPRE','baodan_SUMPRE','baodan_TMOUNT']
+      output: t3
+    op3:
+      name: arithmetic
+      args:
+        table: t3
+        expr: "{0}*1.0/({1}-{2})"
+        prefix: 'rm_'
+        col_lists:
+          cols1: ['lipei_ESTAMT','baodan_TMOUNT','lipei_ESTAMT','baodan_TMOUNT','lipei_ESTAMT','baodan_TMOUNT','lipei_ESTAMT','baodan_TMOUNT']
+          cols2: ['ACCDATE_timestamp','ACCDATE_timestamp','ACCDATE_timestamp','ACCDATE_timestamp','jiuzhen_ILLDATE_timestamp','jiuzhen_ILLDATE_timestamp','jiuzhen_ILLDATE_timestamp','jiuzhen_ILLDATE_timestamp']
+          cols3: ['baodan_BEGDATE_timestamp','baodan_BEGDATE_timestamp','baodan_VALDATE_timestamp','baodan_VALDATE_timestamp','baodan_BEGDATE_timestamp','baodan_BEGDATE_timestamp','baodan_VALDATE_timestamp','baodan_VALDATE_timestamp']
+      output: t4
+
+dag2:
+  inputs: 1
+  ops:
+    op1:
+      name: woe
+      args:
+        table: t1
+        label_col: 'label2'
+        order_col: 'ACCDATE_timestamp'
+        partition_cols: ['NAME','PID','OPERNO','LOCAL','RESULT','ACCDATE','EMPNO','REPZIP','REPID','REPTELE','REPADDR','REPREL','REPNAME','REPDATE','REPTYPE','REPTIME','EMPTEL','DEADDATE','DEADREASON','DISECODE','BRANCHID','baodan_IDTYPE','baodan_NAME','baodan_CLASSCODE','baodan_CLASSNAME','baodan_VALDATE','baodan_BEGDATE','baodan_STOPDAT','baodan_APID','baodan_EMPTEL','baodan_EMPNO','baodan_EMPNAME','baodan_APPNO','baodan_APPNAME','baodan_NEXTDATE','baodan_RECVDATE','baodan_PIECES_TMP','baodan_BRANCHID','baodan_KXFLAG','baodan_NRETDATE','baodan_DELCODE','baodan_PEDATE','baodan_DBDATE','baodan_QUAEMPNO','kehu_IDTYPE','kehu_BTHDATE','kehu_MARRIAGE','kehu_COMPANY','kehu_JOB','kehu_CTELE','kehu_NAME','kehu_CZIP','kehu_FZIP','kehu_CADDR','kehu_MOBILE','kehu_REGDATE','kehu_OPERNO','kehu_FTELE','kehu_FADDR','kehu_ISBLK','kehu_ISGRAY','kehu_DIEDATE','kehu_OTHERREASON','kehu_DEADREASON','lipei_OPERNO','lipei_BEGDATE','lipei_MEMO','lipei_MODATE','lipei_BRANCHID','lipei_NAME','jiuzhen_NAME','jiuzhen_ICCARD','jiuzhen_ILLCODE','jiuzhen_SURGERCODE','jiuzhen_ILLDATE','jiuzhen_OUTDATE','jiuzhen_HOSCODE','jiuzhen_RECDATE','jiuzhen_OPERNO','jiuzhen_BRANCHID']
+        label_delay: 0
+        window_lens: [-1]
+        expr: '{3}*1.0/{2}/({0}/3+1)+{1}/{0}*(1-1/({0}/3+1))'
+      output: t2
+
+

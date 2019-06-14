@@ -1,0 +1,70 @@
+{% extends 'header.jinja2' %}
+{% block run %}
+def run( {% for i in range( fe_inputs ) %}t{{- i + 1 -}}, {% endfor %} context_string):
+    """
+    Define main line of script (two input for instance). Given input data (Dataframes) and configuration output data will be returned (list of Dataframes)
+    Params:
+    t1    Dataframe, upstream data, whose name should be consistent with first slot definition
+    context_string    String, task config whose name should be "context_string"
+    Return:
+    Wrap one or more output data as list of dataframes
+    """
+
+{% for foo in range(  op_list|length ) %}
+{%- if op_list[foo] =='join' -%}
+    {% set op = 'op' + (foo + 1)|string %}
+    {{ op_args[op]['output'] }} = {{  join2( op_args[op]['args']['table'], op_args[op]['args']['condition'], op_args[op]['args']['how'], op_args[op]['args']['drop']) }}
+{%- endif -%}
+{%- if op_list[foo] =='window_aggregate' -%}
+    {% set op = 'op' + (foo + 1)|string %}
+    windows = {{  op_args[op]['args']['windows'] }}
+    aggregate_functions = {{  op_args[op]['args']['aggregate_functions'] }}
+    partition_cols = {{  op_args[op]['args']['partition_cols'] }}
+    target_cols = {{  op_args[op]['args']['target_cols'] }}
+    order_col = '{{  op_args[op]['args']['order_col'] }}'
+    partition_num = {{  op_args[op]['args']['partition_num'] }}
+    {{ op_args[op]['output'] }} = {{  window_aggregate( op_args[op]['args']['table'],'windows','aggregate_functions','partition_cols',
+        'target_cols','order_col','partition_num') }}
+{%- endif -%}
+{%- if op_list[foo] =='window_aggregate_sql' -%}
+    {% set op = 'op' + (foo + 1)|string %}
+    windows = {{  op_args[op]['args']['windows'] }}
+    aggregate_functions = {{  op_args[op]['args']['aggregate_functions'] }}
+    partition_cols = {{  op_args[op]['args']['partition_cols'] }}
+    target_cols = {{  op_args[op]['args']['target_cols'] }}
+    order_col = '{{  op_args[op]['args']['order_col'] }}'
+    partition_num = {{  op_args[op]['args']['partition_num'] }}
+    {{ op_args[op]['output'] }} = {{  window_aggregate_sql( op_args[op]['args']['table'],'windows','aggregate_functions','partition_cols',
+        'target_cols','order_col','partition_num') }}
+{%- endif -%}
+{%- if op_list[foo] =='arithmetic' -%}
+    {% set op = 'op' + (foo + 1)|string %}
+    expr = '{{  op_args[op]['args']['expr'] }}'
+    prefix = '{{  op_args[op]['args']['prefix'] }}'
+    {%- for key,value in op_args[op]['args']['col_lists'].iteritems() %}
+    {{ key|string }} = {{ value }}
+    {%- endfor -%}
+    {% set col_lists = ','.join( op_args[op]['args']['col_lists'].keys() ) %}
+    {{ op_args[op]['output'] }} = {{  arithmetic( op_args[op]['args']['table'],'expr','prefix', col_lists) }}
+{%- endif -%}
+{%- if op_list[foo] =='woe' -%}
+    {% set op = 'op' + (foo + 1)|string %}
+    label_col = '{{  op_args[op]['args']['label_col'] }}'
+    order_col = '{{  op_args[op]['args']['order_col'] }}'
+    partition_cols = {{  op_args[op]['args']['partition_cols'] }}
+    label_delay = {{  op_args[op]['args']['label_delay'] }}
+    {%- if op_args[op]['args'].has_key('window_lens') %}
+    window_lens = {{  op_args[op]['args']['window_lens'] }}
+    {%- if op_args[op]['args'].has_key('expr') %}
+    expr = '{{  op_args[op]['args']['expr'] }}'
+    {{ op_args[op]['output'] }} = woe( {{ op_args[op]['args']['table'] }}, label_col, order_col, partition_cols, label_delay, window_lens, expr)
+    {% else %}
+    {{ op_args[op]['output'] }} = woe( {{ op_args[op]['args']['table'] }},label_col, order_col, partition_cols, label_delay, window_lens)
+    {%- endif -%}
+    {% else %}
+    {{ op_args[op]['output'] }} = woe( {{ op_args[op]['args']['table'] }}, label_col, order_col, partition_cols, label_delay)
+    {%- endif -%}
+{%- endif -%}
+{%- endfor %}
+    return [{{ wide_table }}]
+{% endblock %}

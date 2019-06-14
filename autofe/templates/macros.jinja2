@@ -1,0 +1,17 @@
+{% macro join2(t1, on, how, drop) -%}
+    join2({% for table in t1.split(',') %}{{ table }} ,{% endfor %} {{on}}, '{{how}}', {{drop}})
+{%- endmacro %}
+{% macro window_aggregate(t, windows, aggregate_functions, partition_cols, target_cols, order_col, partition_num) -%}
+    window_aggregate({{t}}, {{windows}}, _generate_functions( {{aggregate_functions}} ),{{partition_cols}},{{target_cols}},{{order_col}},{{partition_num}})
+{%- endmacro %}
+{% macro window_aggregate_sql(t, windows, aggregate_functions, partition_cols, target_cols, order_col, partition_num) -%}
+    window_aggregate_sql({{t}}, {{windows}}, _generate_functions( {{aggregate_functions}} ),{{partition_cols}},{{target_cols}},{{order_col}},{{partition_num}})
+{%- endmacro %}
+{% macro arithmetic(t, expr, prefix, col_lists) -%}
+    arithmetic({{t}}, {{expr}}, {{prefix}}, {{ col_lists }} )
+{%- endmacro %}
+{% macro woe(t, label_col, order_col, partition_cols, label_delay, window_lens, expr) -%}
+    woe({{t}}, {{label_col}}, {{order_col}}, {{ partition_cols }}, {{ label_delay }}, {{ window_lens }}, {{ expr }})
+{%- endmacro %}
+
+{% block main %}{% endblock %}
