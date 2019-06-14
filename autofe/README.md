@@ -176,8 +176,3 @@ Report bugs, contribute new features, discuss implementations, etc. on [wiki](ht
 ## Releases and Contributing
 
 We welcome all contributions. If you are planning to contribute back bug-fixes, or new features, utility functions or extensions to the core, please submit to the wiki page.
-
-## The Team
-
-AutoFE is currently maintained by Junlin (<yaojunlin@4paradigm.com>), and Xiaodan (<zhuxiaodan@4paradigm.com>).
-
