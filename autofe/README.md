@@ -39,7 +39,7 @@ Follow the steps below to install AutoFE locally.
 2. Clone the repository from the remote
 
    ```bash
-   git clone git@gitlab.4pd.io:yaojunlin/autofe.git
+   git clone https://github.com/wang1263/autofe.git
    ```
 
 3. Change to the AutoFE directory
